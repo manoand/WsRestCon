@@ -1,11 +1,18 @@
 package wsapp.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wsapp.entity.Product;
+import wsapp.service.HttpClientFactory;
+import wsapp.service.HttpClientService;
 import wsapp.utils.JSONUtils;
 
 import java.io.IOException;
@@ -17,10 +24,13 @@ import java.net.http.HttpResponse;
 @RestController
 public class WsCallController {
 
-    private final String serviceURL = "";
+    private Logger LOOGER = LoggerFactory.getLogger(WsCallController.class);
 
-    @GetMapping(value = "/addProduct/{name}/{price}", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> addProduct(@PathVariable String name,@PathVariable String price ) throws IOException, InterruptedException {
+    @Autowired
+    private HttpClientFactory httpClientFactory;
+
+    @GetMapping(value = "/addProduct/{version}/{name}/{price}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> addProduct11(@PathVariable String version,@PathVariable String name,@PathVariable String price ) throws IOException, InterruptedException {
         Double productPrice;
         try
         {
@@ -30,27 +40,15 @@ public class WsCallController {
         {
             return new ResponseEntity<String>("Price is not a double :" + price, HttpStatus.BAD_REQUEST);
         }
-        Product bean = new Product();
-        bean.setName(name);
-        bean.setPrice(productPrice);
-        String inputJson = JSONUtils.covertFromObjectToJson(bean);
-        HttpRequest requestAdd = HttpRequest.newBuilder(URI.create(serviceURL+"addProduct"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(inputJson)).build();
+        Product product = new Product();
+        product.setName(name);
+        product.setPrice(productPrice);
 
-        HttpClient httpClient = HttpClient.newBuilder().build();
-        HttpResponse<String> responseAdd = httpClient
-                .send(requestAdd, HttpResponse.BodyHandlers.ofString());
+        HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
 
-        HttpRequest requestGet = HttpRequest.newBuilder(URI.create(serviceURL+"getProduct/"+responseAdd.body()))
-                .header("Content-Type", "application/json")
-                .GET().build();
+        product = httpClientService.callWsAddProduct(product);
 
-        HttpResponse<String> responseGet = httpClient
-                .send(requestGet, HttpResponse.BodyHandlers.ofString());
-
-        bean = JSONUtils.covertFromJsonToObject(responseGet.body(),Product.class);
-
-        return new ResponseEntity<String>("Product added successfully :" + bean.toString(), HttpStatus.CREATED);
+        return new ResponseEntity<String>("Product added successfully :" + product.toString(), HttpStatus.CREATED);
     }
+
 }

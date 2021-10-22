@@ -10,5 +10,5 @@ public interface HttpClientService {
     Product callGetProduct(String id);
     List<Product> callGetAllProduct();
     Product callWsAddProduct(Product product);
-    boolean callDeleteProduct(String id);
+    Product callDeleteProduct(String id);
 }

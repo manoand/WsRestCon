@@ -72,4 +72,16 @@ public class WsCallController {
         }
         return new ResponseEntity<String>(body.toString(), HttpStatus.OK);
     }
+
+    @DeleteMapping(value = "/deleteProduct/{version}/{id}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> deleteProduct(@PathVariable String version, @PathVariable String id) {
+        try {
+            Integer idProd = Integer.parseInt(id);
+        }catch (NumberFormatException  e){
+            return new ResponseEntity<String>("Id is not a double :" + id, HttpStatus.BAD_REQUEST);
+        }
+        HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
+        Product product = httpClientService.callDeleteProduct(id);
+        return new ResponseEntity<String>("Deleted product :"+ product.toString(), HttpStatus.OK);
+    }
 }

@@ -1,6 +1,7 @@
 package wsapp.service.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,6 +51,12 @@ public class HttpClientJava11impl implements HttpClientService {
                 .GET().build();
     }
 
+    private HttpRequest getRequestDeleteProduct(String id) {
+        LOGGER.info("Call :" + serviceURL + "getProduct with id :" + id);
+        return HttpRequest.newBuilder(URI.create(serviceURL + "deleteProduct/" + id))
+                .DELETE().build();
+    }
+
     private HttpResponse<String> getResponse(HttpRequest request) {
         HttpResponse<String> response = null;
         try {
@@ -82,7 +89,12 @@ public class HttpClientJava11impl implements HttpClientService {
     }
 
     @Override
-    public boolean callDeleteProduct(String id) {
-        return false;
+    public Product callDeleteProduct(String id) {
+        Product product = null;
+        HttpResponse<String> getProductResponse = getResponse(getRequestDeleteProduct(id));
+        if(HttpStatus.SC_OK == getProductResponse.statusCode()){
+            product =JSONUtils.covertFromJsonToObject(getProductResponse.body(), Product.class);
+        }
+        return product;
     }
 }

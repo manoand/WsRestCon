@@ -39,25 +39,37 @@ public class HttpClientJava8Impl implements HttpClientService {
     @Override
     public List<Product> callGetAllProduct() {
         HttpURLConnection con = getGetAllProductConnection();
-        StringBuilder jsonProdcut = getResponse(con);
+        StringBuilder response = getResponse(con);
         con.disconnect();
-        return JSONUtils.convertFromJsonToList(jsonProdcut.toString(), new TypeReference<List<Product>>() {
+        return JSONUtils.convertFromJsonToList(response.toString(), new TypeReference<List<Product>>() {
         });
     }
 
     @Override
     public Product callWsAddProduct(Product product) {
-        HttpURLConnection conAd = getAddProductConnection(product);
-        StringBuilder response = getResponse(conAd);
-        conAd.disconnect();
+        HttpURLConnection con = getAddProductConnection(product);
+        StringBuilder response = getResponse(con);
+        con.disconnect();
         return callGetProduct(response.toString());
     }
 
     @Override
-    public boolean callDeleteProduct(String id) {
-        return false;
+    public Product callDeleteProduct(String id) {
+        HttpURLConnection con = getDeleteProductConnection(id);
+        StringBuilder response = getResponse(con);
+        con.disconnect();
+        return JSONUtils.covertFromJsonToObject(response.toString(), Product.class);
     }
 
+    private URL getDeleteProductUrl(String id) {
+        URL url = null;
+        try {
+            url = new URL(serviceURL + "getProduct/" + id);
+        } catch (MalformedURLException e) {
+            LOOGER.error("Creation of the URL for GetProdut failed", e);
+        }
+        return url;
+    }
 
     private URL getGetProductUrl(String id) {
         URL url = null;
@@ -111,7 +123,21 @@ public class HttpClientJava8Impl implements HttpClientService {
             con = (HttpURLConnection) getGetProductUrl(id).openConnection();
             con.setRequestMethod("GET");
         } catch (IOException e) {
-            LOOGER.error("Creation of the connection for GetProdut failed", e);
+            LOOGER.error("Creation of the connection for GetProduct failed", e);
+        }
+        con.setRequestProperty("Accept", "application/json; " + Constants.UTF8);
+        con.setDoOutput(true);
+
+        return con;
+    }
+
+    private HttpURLConnection getDeleteProductConnection(String id) {
+        HttpURLConnection con = null;
+        try {
+            con = (HttpURLConnection) getDeleteProductUrl(id).openConnection();
+            con.setRequestMethod("DELETE");
+        } catch (IOException e) {
+            LOOGER.error("Creation of the connection for deleteProduct failed", e);
         }
         con.setRequestProperty("Accept", "application/json; " + Constants.UTF8);
         con.setDoOutput(true);

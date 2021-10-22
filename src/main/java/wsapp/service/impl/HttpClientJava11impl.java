@@ -45,6 +45,12 @@ public class HttpClientJava11impl implements HttpClientService {
                 .POST(HttpRequest.BodyPublishers.ofString(inputJson)).build();
     }
 
+    private HttpRequest getRequestUpdateProduct(String inputJson) {
+        return HttpRequest.newBuilder(URI.create(serviceURL + "updateProduct"))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(inputJson)).build();
+    }
+
     private HttpRequest getRequestGetProduct(String id) {
         LOGGER.info("Call :" + serviceURL + "getProduct with id :" + id);
         return HttpRequest.newBuilder(URI.create(serviceURL + "getProduct/" + id))
@@ -96,5 +102,11 @@ public class HttpClientJava11impl implements HttpClientService {
             product =JSONUtils.covertFromJsonToObject(getProductResponse.body(), Product.class);
         }
         return product;
+    }
+
+    @Override
+    public Product callUpdateProduct(Product product) {
+        HttpResponse<String> response = getResponse(getRequestUpdateProduct(JSONUtils.covertFromObjectToJson(product)));
+        return JSONUtils.covertFromJsonToObject(response.body(), Product.class);
     }
 }

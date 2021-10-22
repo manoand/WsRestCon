@@ -27,6 +27,7 @@ public class HttpClientJava8Impl implements HttpClientService {
 
     private URL addProductUrl;
     private URL allProductUrl;
+    private URL updateProductUrl;
 
     @Override
     public Product callGetProduct(String id) {
@@ -61,6 +62,14 @@ public class HttpClientJava8Impl implements HttpClientService {
         return JSONUtils.covertFromJsonToObject(response.toString(), Product.class);
     }
 
+    @Override
+    public Product callUpdateProduct(Product product) {
+        HttpURLConnection con = getUpdateProductConnection(product);
+        StringBuilder response = getResponse(con);
+        con.disconnect();
+        return JSONUtils.covertFromJsonToObject(response.toString(), Product.class);
+    }
+
     private URL getDeleteProductUrl(String id) {
         URL url = null;
         try {
@@ -90,6 +99,17 @@ public class HttpClientJava8Impl implements HttpClientService {
             }
         }
         return addProductUrl;
+    }
+
+    private URL getUpdateProductUrl() {
+        if (updateProductUrl == null) {
+            try {
+                updateProductUrl = new URL(serviceURL + "updateProduct");
+            } catch (MalformedURLException e) {
+                LOOGER.error("Creation of the URL for AddProduct failed", e);
+            }
+        }
+        return updateProductUrl;
     }
 
     private URL getAllProductUrl() {
@@ -180,6 +200,31 @@ public class HttpClientJava8Impl implements HttpClientService {
             os.write(input, 0, input.length);
         } catch (IOException e) {
             LOOGER.error("AddProduct request failed ", e);
+        }
+        return con;
+    }
+
+    private HttpURLConnection getUpdateProductConnection(Product product) {
+        HttpURLConnection con = null;
+        try {
+            con = (HttpURLConnection) getUpdateProductUrl().openConnection();
+            con.setRequestMethod("PUT");
+        } catch (IOException e) {
+            LOOGER.error("Creation of the connection for Product failed", e);
+        }
+        con.setRequestProperty("Content-Type", "application/json; " + Constants.UTF8);
+        con.setRequestProperty("Accept", "text/html");
+        con.setDoOutput(true);
+
+        String inputJson = null;
+        inputJson = JSONUtils.covertFromObjectToJson(product);
+
+        //Sending the message
+        try (OutputStream os = con.getOutputStream()) {
+            byte[] input = inputJson.getBytes(Constants.UTF8);
+            os.write(input, 0, input.length);
+        } catch (IOException e) {
+            LOOGER.error("Product request failed ", e);
         }
         return con;
     }

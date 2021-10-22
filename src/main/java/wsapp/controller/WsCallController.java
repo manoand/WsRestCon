@@ -21,15 +21,12 @@ public class WsCallController {
     @Autowired
     private HttpClientFactory httpClientFactory;
 
-    @GetMapping(value = "/addProduct/{version}/{name}/{price}", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> addProduct(@PathVariable String version,@PathVariable String name,@PathVariable String price ) {
+    @PostMapping(value = "/addProduct/{version}/{name}/{price}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> addProduct(@PathVariable String version, @PathVariable String name, @PathVariable String price) {
         Double productPrice;
-        try
-        {
+        try {
             productPrice = Double.parseDouble(price);
-        }
-        catch(NumberFormatException e)
-        {
+        } catch (NumberFormatException e) {
             return new ResponseEntity<String>("Price is not a double :" + price, HttpStatus.BAD_REQUEST);
         }
         Product product = new Product();
@@ -40,7 +37,7 @@ public class WsCallController {
 
         product = httpClientService.callWsAddProduct(product);
 
-        return new ResponseEntity<String>("Product added successfully :"+System.lineSeparator() + product.toString(), HttpStatus.CREATED);
+        return new ResponseEntity<String>("Product added successfully :" + System.lineSeparator() + product.toString(), HttpStatus.CREATED);
     }
 
     @GetMapping(value = "/getProduct/{version}/{id}", produces = MediaType.TEXT_HTML_VALUE)
@@ -48,7 +45,7 @@ public class WsCallController {
 
         try {
             Integer idProd = Integer.parseInt(id);
-        }catch (NumberFormatException  e){
+        } catch (NumberFormatException e) {
             return new ResponseEntity<String>("Id is not a double :" + id, HttpStatus.BAD_REQUEST);
         }
 
@@ -60,15 +57,15 @@ public class WsCallController {
 
     }
 
-    @GetMapping(value = "getAll/{version}",produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> getAllProduct(@PathVariable String version){
+    @GetMapping(value = "/getAll/{version}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> getAllProduct(@PathVariable String version) {
         HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
         List<Product> productList = httpClientService.callGetAllProduct();
         StringBuilder body = new StringBuilder();
-        body.append("Product list :"+System.lineSeparator());
-        for(Product product : productList){
+        body.append("Product list :" + System.lineSeparator());
+        for (Product product : productList) {
             body.append(product.toString());
-            body.append( System.lineSeparator());
+            body.append(System.lineSeparator());
         }
         return new ResponseEntity<String>(body.toString(), HttpStatus.OK);
     }
@@ -77,11 +74,19 @@ public class WsCallController {
     public ResponseEntity<String> deleteProduct(@PathVariable String version, @PathVariable String id) {
         try {
             Integer idProd = Integer.parseInt(id);
-        }catch (NumberFormatException  e){
+        } catch (NumberFormatException e) {
             return new ResponseEntity<String>("Id is not a double :" + id, HttpStatus.BAD_REQUEST);
         }
         HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
         Product product = httpClientService.callDeleteProduct(id);
-        return new ResponseEntity<String>("Deleted product :"+ product.toString(), HttpStatus.OK);
+        return new ResponseEntity<String>("Deleted product :" + product.toString(), HttpStatus.OK);
     }
+
+    @PutMapping(value = "/updateProduct/{version}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> updateProduct(@PathVariable String version, @RequestBody Product product) {
+        HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
+        httpClientService.callUpdateProduct(product);
+        return new ResponseEntity<String>("Updated product :" + product.toString(), HttpStatus.OK);
+    }
+
 }

@@ -11,10 +11,10 @@ public class Product {
     public Product() {
     }
 
-    public Product(String name, String description, Double price) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
+    public Product(Product product) {
+        this.name = product.name;
+        this.description = product.description;
+        this.price = product.price;
     }
 
     public long getId() {

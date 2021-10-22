@@ -21,22 +21,10 @@ public class WsCallController {
     @Autowired
     private HttpClientFactory httpClientFactory;
 
-    @PostMapping(value = "/addProduct/{version}/{name}/{price}", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> addProduct(@PathVariable String version, @PathVariable String name, @PathVariable String price) {
-        Double productPrice;
-        try {
-            productPrice = Double.parseDouble(price);
-        } catch (NumberFormatException e) {
-            return new ResponseEntity<String>("Price is not a double :" + price, HttpStatus.BAD_REQUEST);
-        }
-        Product product = new Product();
-        product.setName(name);
-        product.setPrice(productPrice);
-
+    @PostMapping(value = "/addProduct/{version}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> addProduct(@PathVariable String version, @RequestBody Product product) {
         HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
-
         product = httpClientService.callWsAddProduct(product);
-
         return new ResponseEntity<String>("Product added successfully :" + System.lineSeparator() + product.toString(), HttpStatus.CREATED);
     }
 

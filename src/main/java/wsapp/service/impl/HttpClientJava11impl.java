@@ -21,7 +21,7 @@ import java.net.http.HttpResponse;
 @Qualifier("HttpClientJava11impl")
 public class HttpClientJava11impl implements HttpClientService {
 
-    private Logger LOOGER = LoggerFactory.getLogger(HttpClientJava11impl.class);
+    private Logger LOGGER = LoggerFactory.getLogger(HttpClientJava11impl.class);
 
     @Value("${service.url}")
     private String serviceURL;
@@ -35,21 +35,26 @@ public class HttpClientJava11impl implements HttpClientService {
                 .POST(HttpRequest.BodyPublishers.ofString(inputJson)).build();
     }
 
-    private HttpResponse<String> getResponse(HttpRequest request) throws IOException, InterruptedException {
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        LOOGER.info("Request : " + request.toString() + "response  : " + response.toString());
+    private HttpResponse<String> getResponse(HttpRequest request)  {
+        HttpResponse<String> response = null;
+        try {
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (InterruptedException | IOException e) {
+            LOGGER.error("Following request failed :"+request.toString(),e);
+        }
+        LOGGER.info("Request : " + request.toString() + "response  : " + response.body());
         return response;
     }
 
     private HttpRequest getRequestGetProduct(String id) {
-        LOOGER.info("Call :" + serviceURL + "getProduct with id :" + id);
+        LOGGER.info("Call :" + serviceURL + "getProduct with id :" + id);
         return HttpRequest.newBuilder(URI.create(serviceURL + "getProduct/" + id))
                 .header("Content-Type", "application/json")
                 .GET().build();
     }
 
     @Override
-    public Product callWsAddProduct(Product product) throws IOException, InterruptedException {
+    public Product callWsAddProduct(Product product)  {
         String inputJson = JSONUtils.covertFromObjectToJson(product);
         HttpResponse<String> addProductResponse = getResponse(getRequestAddProduct(inputJson));
         HttpResponse<String> getProductResponse = getResponse(getRequestGetProduct(addProductResponse.body()));

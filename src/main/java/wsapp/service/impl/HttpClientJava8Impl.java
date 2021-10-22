@@ -1,6 +1,6 @@
 package wsapp.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +15,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 @Service
 @Qualifier("HttpClientJava8impl")
@@ -25,14 +26,36 @@ public class HttpClientJava8Impl implements HttpClientService {
     private String serviceURL;
 
     private URL addProductUrl;
+    private URL allProductUrl;
+
+    @Override
+    public Product callGetProduct(String id) {
+        HttpURLConnection conGet = getGetProductConnection(id);
+        StringBuilder jsonProduct = getResponse(conGet);
+        conGet.disconnect();
+        return JSONUtils.covertFromJsonToObject(jsonProduct.toString(), Product.class);
+    }
+
+    @Override
+    public List<Product> callGetAllProduct() {
+        HttpURLConnection con = getGetAllProductConnection();
+        StringBuilder jsonProdcut = getResponse(con);
+        con.disconnect();
+        return JSONUtils.convertFromJsonToList(jsonProdcut.toString(), new TypeReference<List<Product>>() {
+        });
+    }
 
     @Override
     public Product callWsAddProduct(Product product) {
         HttpURLConnection conAd = getAddProductConnection(product);
         StringBuilder response = getResponse(conAd);
-        HttpURLConnection conGet = getGetProductConnection(response.toString());
-        response = getResponse(conGet);
-        return JSONUtils.covertFromJsonToObject(response.toString(), Product.class);
+        conAd.disconnect();
+        return callGetProduct(response.toString());
+    }
+
+    @Override
+    public boolean callDeleteProduct(String id) {
+        return false;
     }
 
 
@@ -41,9 +64,9 @@ public class HttpClientJava8Impl implements HttpClientService {
         try {
             url = new URL(serviceURL + "getProduct/" + id);
         } catch (MalformedURLException e) {
-            LOOGER.error("Creation of the URL for GetProdut failed",e);
+            LOOGER.error("Creation of the URL for GetProdut failed", e);
         }
-        return  url;
+        return url;
     }
 
     private URL getAddProductUrl() {
@@ -51,10 +74,21 @@ public class HttpClientJava8Impl implements HttpClientService {
             try {
                 addProductUrl = new URL(serviceURL + "addProduct");
             } catch (MalformedURLException e) {
-                LOOGER.error("Creation of the URL for AddProduct failed",e);
+                LOOGER.error("Creation of the URL for AddProduct failed", e);
             }
         }
         return addProductUrl;
+    }
+
+    private URL getAllProductUrl() {
+        if (allProductUrl == null) {
+            try {
+                allProductUrl = new URL(serviceURL + "getDetails");
+            } catch (MalformedURLException e) {
+                LOOGER.error("Creation of the URL for getDetails failed", e);
+            }
+        }
+        return allProductUrl;
     }
 
     private StringBuilder getResponse(HttpURLConnection con) {
@@ -66,7 +100,7 @@ public class HttpClientJava8Impl implements HttpClientService {
                 response.append(responseLine.trim());
             }
         } catch (IOException e) {
-            LOOGER.error("Unable to retrieve the response",e);
+            LOOGER.error("Unable to retrieve the response", e);
         }
         return response;
     }
@@ -77,7 +111,21 @@ public class HttpClientJava8Impl implements HttpClientService {
             con = (HttpURLConnection) getGetProductUrl(id).openConnection();
             con.setRequestMethod("GET");
         } catch (IOException e) {
-            LOOGER.error("Creation of the connection for GetProdut failed",e);
+            LOOGER.error("Creation of the connection for GetProdut failed", e);
+        }
+        con.setRequestProperty("Accept", "application/json; " + Constants.UTF8);
+        con.setDoOutput(true);
+
+        return con;
+    }
+
+    private HttpURLConnection getGetAllProductConnection() {
+        HttpURLConnection con = null;
+        try {
+            con = (HttpURLConnection) getAllProductUrl().openConnection();
+            con.setRequestMethod("GET");
+        } catch (IOException e) {
+            LOOGER.error("Creation of the connection for getDetails failed", e);
         }
         con.setRequestProperty("Accept", "application/json; " + Constants.UTF8);
         con.setDoOutput(true);
@@ -91,7 +139,7 @@ public class HttpClientJava8Impl implements HttpClientService {
             con = (HttpURLConnection) getAddProductUrl().openConnection();
             con.setRequestMethod("POST");
         } catch (IOException e) {
-            LOOGER.error("Creation of the connection for AddProduct failed",e);
+            LOOGER.error("Creation of the connection for AddProduct failed", e);
         }
         con.setRequestProperty("Content-Type", "application/json; " + Constants.UTF8);
         con.setRequestProperty("Accept", "text/html");
@@ -105,7 +153,7 @@ public class HttpClientJava8Impl implements HttpClientService {
             byte[] input = inputJson.getBytes(Constants.UTF8);
             os.write(input, 0, input.length);
         } catch (IOException e) {
-            LOOGER.error("AddProduct request failed ",e);
+            LOOGER.error("AddProduct request failed ", e);
         }
         return con;
     }

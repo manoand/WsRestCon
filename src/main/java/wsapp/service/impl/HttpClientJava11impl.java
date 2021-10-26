@@ -11,6 +11,7 @@ import wsapp.entity.Product;
 import wsapp.service.HttpClientService;
 import wsapp.utils.JSONUtils;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -29,12 +30,10 @@ public class HttpClientJava11impl implements HttpClientService {
 
     private HttpRequest requestGetAllProduct;
 
-    private HttpRequest getRequestGetAllProduct(){
-        if(requestGetAllProduct == null) {
-            requestGetAllProduct = HttpRequest.newBuilder(URI.create(serviceURL + "getDetails"))
-                    .GET().build();
-        }
-        return requestGetAllProduct;
+    @PostConstruct
+    public void initHttpRequest() {
+        requestGetAllProduct = HttpRequest.newBuilder(URI.create(serviceURL + "getDetails"))
+                .GET().build();
     }
 
     private final HttpClient httpClient = HttpClient.newBuilder().build();
@@ -82,13 +81,13 @@ public class HttpClientJava11impl implements HttpClientService {
 
     @Override
     public List<Product> callGetAllProduct() {
-        HttpResponse<String> getAllResponse = getResponse(getRequestGetAllProduct());
+        HttpResponse<String> getAllResponse = getResponse(requestGetAllProduct);
         return JSONUtils.convertFromJsonToList(getAllResponse.body(), new TypeReference<List<Product>>() {
         });
     }
 
     @Override
-    public Product callWsAddProduct(Product product) {
+    public Product callAddProduct(Product product) {
         String inputJson = JSONUtils.covertFromObjectToJson(product);
         HttpResponse<String> addProductResponse = getResponse(getRequestAddProduct(inputJson));
         return callGetProduct(addProductResponse.body());

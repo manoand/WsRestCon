@@ -11,6 +11,7 @@ import wsapp.service.HttpClientService;
 import wsapp.utils.Constants;
 import wsapp.utils.JSONUtils;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -47,7 +48,7 @@ public class HttpClientJava8Impl implements HttpClientService {
     }
 
     @Override
-    public Product callWsAddProduct(Product product) {
+    public Product callAddProduct(Product product) {
         HttpURLConnection con = getAddProductConnection(product);
         StringBuilder response = getResponse(con);
         con.disconnect();
@@ -90,37 +91,15 @@ public class HttpClientJava8Impl implements HttpClientService {
         return url;
     }
 
-    private URL getAddProductUrl() {
-        if (addProductUrl == null) {
-            try {
-                addProductUrl = new URL(serviceURL + "addProduct");
-            } catch (MalformedURLException e) {
-                LOOGER.error("Creation of the URL for AddProduct failed", e);
-            }
+    @PostConstruct
+    public void initURL() {
+        try {
+            addProductUrl = new URL(serviceURL + "addProduct");
+            updateProductUrl = new URL(serviceURL + "updateProduct");
+            allProductUrl = new URL(serviceURL + "getDetails");
+        } catch (MalformedURLException e) {
+            LOOGER.error("Creation of an URLfailed", e);
         }
-        return addProductUrl;
-    }
-
-    private URL getUpdateProductUrl() {
-        if (updateProductUrl == null) {
-            try {
-                updateProductUrl = new URL(serviceURL + "updateProduct");
-            } catch (MalformedURLException e) {
-                LOOGER.error("Creation of the URL for AddProduct failed", e);
-            }
-        }
-        return updateProductUrl;
-    }
-
-    private URL getAllProductUrl() {
-        if (allProductUrl == null) {
-            try {
-                allProductUrl = new URL(serviceURL + "getDetails");
-            } catch (MalformedURLException e) {
-                LOOGER.error("Creation of the URL for getDetails failed", e);
-            }
-        }
-        return allProductUrl;
     }
 
     private StringBuilder getResponse(HttpURLConnection con) {
@@ -168,7 +147,7 @@ public class HttpClientJava8Impl implements HttpClientService {
     private HttpURLConnection getGetAllProductConnection() {
         HttpURLConnection con = null;
         try {
-            con = (HttpURLConnection) getAllProductUrl().openConnection();
+            con = (HttpURLConnection) allProductUrl.openConnection();
             con.setRequestMethod("GET");
         } catch (IOException e) {
             LOOGER.error("Creation of the connection for getDetails failed", e);
@@ -182,7 +161,7 @@ public class HttpClientJava8Impl implements HttpClientService {
     private HttpURLConnection getAddProductConnection(Product product) {
         HttpURLConnection con = null;
         try {
-            con = (HttpURLConnection) getAddProductUrl().openConnection();
+            con = (HttpURLConnection) addProductUrl.openConnection();
             con.setRequestMethod("POST");
         } catch (IOException e) {
             LOOGER.error("Creation of the connection for AddProduct failed", e);
@@ -207,7 +186,7 @@ public class HttpClientJava8Impl implements HttpClientService {
     private HttpURLConnection getUpdateProductConnection(Product product) {
         HttpURLConnection con = null;
         try {
-            con = (HttpURLConnection) getUpdateProductUrl().openConnection();
+            con = (HttpURLConnection) updateProductUrl.openConnection();
             con.setRequestMethod("PUT");
         } catch (IOException e) {
             LOOGER.error("Creation of the connection for Product failed", e);

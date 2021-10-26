@@ -8,15 +8,17 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wsapp.entity.Product;
+import wsapp.service.CallWsThread;
 import wsapp.service.HttpClientFactory;
 import wsapp.service.HttpClientService;
 
 import java.util.List;
+import java.util.Random;
 
 @RestController
 public class WsCallController {
 
-    private Logger LOOGER = LoggerFactory.getLogger(WsCallController.class);
+    private Logger LOGGER = LoggerFactory.getLogger(WsCallController.class);
 
     @Autowired
     private HttpClientFactory httpClientFactory;
@@ -24,7 +26,7 @@ public class WsCallController {
     @PostMapping(value = "/addProduct/{version}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> addProduct(@PathVariable String version, @RequestBody Product product) {
         HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
-        product = httpClientService.callWsAddProduct(product);
+        product = httpClientService.callAddProduct(product);
         return new ResponseEntity<String>("Product added successfully :" + System.lineSeparator() + product.toString(), HttpStatus.CREATED);
     }
 
@@ -77,4 +79,37 @@ public class WsCallController {
         return new ResponseEntity<String>("Updated product :" + product.toString(), HttpStatus.OK);
     }
 
+    @GetMapping(value = "/FredLaunch/{version}/{nb}")
+    public ResponseEntity<String> lancementDesFreds(@PathVariable String version, @PathVariable int nb){
+        HttpClientService httpClientService = httpClientFactory.getHttpClient(version);
+        for(int i = 0; i <= nb ;i++){
+            CallWsThread callWsThread = new CallWsThread(httpClientService,nb);
+            callWsThread.setName("Fred "+geneRandomName()+" "+i);
+            callWsThread.start();
+        }
+        return new ResponseEntity<String>("Fin des Freds", HttpStatus.OK);
+    }
+
+    public String geneRandomName(){
+        Random random = new Random();
+        int nb = random.nextInt(4);
+        String name = null;
+        switch (nb){
+            case 0:
+                name="Le Flagorneur";
+                break;
+            case 1:
+                name="L'Alambique";
+                break;
+            case 2:
+                name="L'Abscon";
+                break;
+            case 3:
+                name="Le Triptyque";
+                break;
+            default:
+                name = "Le Defaut";
+        }
+        return name;
+    }
 }

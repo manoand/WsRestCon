@@ -9,7 +9,7 @@ public interface HttpClientService {
 
     Product callGetProduct(String id);
     List<Product> callGetAllProduct();
-    Product callWsAddProduct(Product product);
+    Product callAddProduct(Product product);
     Product callDeleteProduct(String id);
     Product callUpdateProduct(Product product);
 }

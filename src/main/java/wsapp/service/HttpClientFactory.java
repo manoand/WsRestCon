@@ -15,6 +15,10 @@ public class HttpClientFactory {
     @Qualifier("HttpClientJava8impl")
     private HttpClientService httpClientServiceJava8;
 
+    @Autowired
+    @Qualifier("Apache")
+    private HttpClientService httpClientServiceApache;
+
     public HttpClientService getHttpClient(String version){
         HttpClientService httpClientService;
         switch (version){
@@ -23,6 +27,9 @@ public class HttpClientFactory {
                 break;
             case"8":
                 httpClientService = httpClientServiceJava8;
+                break;
+            case "ap":
+                httpClientService = httpClientServiceApache;
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + version);
